@@ -23,6 +23,9 @@
 #include "common.h"
 #include "hash.h"
 
+// added by LYH on 20190815
+#include "parser.h"
+
 /** Create a stanza object.
  *  This function allocates and initializes a blank stanza object.
  *  The stanza will have a reference count of one, so the caller does not
@@ -462,6 +465,45 @@ int xmpp_stanza_to_text(xmpp_stanza_t *stanza,
     return XMPP_EOK;
 }
 
+void _cb_text_to_stanza(xmpp_stanza_t *stanza, void *userdata)
+{
+    if (stanza && userdata) {
+        xmpp_stanza_t ** parseRes = (xmpp_stanza_t **)userdata;
+        *parseRes = xmpp_stanza_clone(stanza);
+    }
+}
+
+/**
+ * added by LYH on 20190815
+ * unmarshall text to stanza object
+ * 
+ * @param ctx xmpp context
+ * @param text the string that will be processed
+ * 
+ * @return stanza or NULL on failure
+ */
+xmpp_stanza_t * xmpp_text_to_stanza(xmpp_ctx_t * ctx, const char * const text)
+{
+    int ret;
+    xmpp_stanza_t * retStanza = NULL;
+    parser_t * parser = parser_new(ctx, NULL, NULL, _cb_text_to_stanza, &retStanza);
+    ret = parser_feed(parser, "<stream>", 8);
+    if (ret == 0) {
+        return NULL;
+    }
+    ret = parser_feed(parser, text, strlen(text));
+    if (ret == 0) {
+        return NULL;
+    }
+    ret = parser_feed(parser, "</stream>", 9);
+    if (ret == 0) {
+        return NULL;
+    }
+    parser_free(parser);
+
+    return retStanza;
+}
+
 /** Set the name of a stanza.
  *  
  *  @param stanza a Strophe stanza object
@@ -649,6 +691,32 @@ int xmpp_stanza_add_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child)
 
     return XMPP_EOK;
 }
+
+/** Remove the specified child
+ *  This function remove specified child from its parent, but does not releaseit.
+ *  It's the caller's responsibility to release the child.
+ *
+ *  @param stanza a Strophe stanza object
+ *  @param child the child stanza object
+ *
+ *  @return XMPP_EOK (0) on success or a number less than 0 on failure
+ *
+ *  @ingroup Stanza
+ */
+int xmpp_stanza_remove_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child)
+{
+    xmpp_stanza_t *s;
+
+    s = stanza->children;
+    while (s && s != child) s = s->next;
+    if (s) {
+        if (s->prev) s->prev->next = s->next;
+        if (s->next) s->next->prev = s->prev;
+    }
+
+    return XMPP_EOK;
+}
+
 
 /** Set the text data for a text stanza.
  *  This function copies the text given and sets the stanza object's text to
