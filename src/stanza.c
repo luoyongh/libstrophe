@@ -717,6 +717,13 @@ int xmpp_stanza_remove_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child)
     return XMPP_EOK;
 }
 
+void xmpp_stanza_reset_next(xmpp_stanza_t *stanza)
+{
+    if (stanza) {
+        stanza->next = NULL;
+    }
+}
+
 
 /** Set the text data for a text stanza.
  *  This function copies the text given and sets the stanza object's text to

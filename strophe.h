@@ -339,6 +339,8 @@ xmpp_stanza_t *xmpp_stanza_get_next(xmpp_stanza_t * const stanza);
 int xmpp_stanza_add_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child);
 /* added by LYH on 20190829 */
 int xmpp_stanza_remove_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child);
+/* added by LYH on 20191018 */
+void xmpp_stanza_reset_next(xmpp_stanza_t *stanza);
 
 const char *xmpp_stanza_get_attribute(xmpp_stanza_t * const stanza,
 				      const char * const name);
